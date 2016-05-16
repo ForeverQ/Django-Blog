@@ -3,12 +3,24 @@ from django.http import HttpResponse
 from article.models import Article
 from datetime import datetime
 from django.http import Http404
+from django.contrib.syndication.views import Feed
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 
 # Create your views here.
 
 def home(request):
-    post_list = Article.objects.all()  # 获取全部 Article 对象
+    posts = Article.objects.all()  # 获取全部 Article 对象
+    paginator = Paginator(posts, 3)  # 每页显示两个
+    page = request.GET.get('page')
+    print(page)
+    try:
+        post_list = paginator.page(page)
+        print(post_list)
+    except PageNotAnInteger:
+        post_list = paginator.page(1)
+    except EmptyPage:
+        post_list = paginator.paginator(paginator.num_pages)
     return render(request, 'home.html', {'post_list': post_list})
 
 
@@ -52,3 +64,20 @@ def blog_search(request):
             else:
                 return render(request, 'archives.html', {'post_list': post_list, 'error': False})
 
+
+class RSSFeed(Feed):
+    title = "RSS feed - article"
+    link = "feeds/posts/"
+    description = "RSS feed - blog posts"
+
+    def items(self):
+        return Article.objects.order_by('-date_time')
+
+    def item_title(self, item):
+        return item.title
+
+    def item_pubdate(self, item):
+        return item.date_time
+
+    def item_description(self, item):
+        return item.content
