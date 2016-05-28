@@ -1,0 +1,7 @@
+my_blog:
+    image: foreverq/my_blog
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+        - ~/Programming/Projects/Django/my_blog/:/code/
+    ports:
+        - "8000:8000"
